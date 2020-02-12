@@ -205,7 +205,7 @@ static int _init_server_addr(void)
     }
     memcpy(&_client.server_ep.addr.ipv6[0], &addr.u8[0], sizeof(addr.u8));
 
-    _client.server_ep.port = GCOAP_PORT;
+    _client.server_ep.port = CONFIG_GCOAP_PORT;
 
     return 0;
 }
@@ -216,11 +216,11 @@ static int _init_server_addr(void)
 static void _register(void)
 {
     coap_pkt_t pdu;
-    uint8_t buf[GCOAP_PDU_BUF_SIZE];
+    uint8_t buf[CONFIG_GCOAP_PDU_BUF_SIZE];
     int len;
 
     if (_client.state == LWM2M_STATE_REG_RENEW) {
-        gcoap_req_init(&pdu, buf, GCOAP_PDU_BUF_SIZE, COAP_METHOD_POST,
+        gcoap_req_init(&pdu, buf, CONFIG_GCOAP_PDU_BUF_SIZE, COAP_METHOD_POST,
                       &_client.server_location[0]);
         coap_hdr_set_type(pdu.hdr, COAP_TYPE_CON);
         len = coap_opt_finish(&pdu, COAP_OPT_FINISH_NONE);
@@ -231,7 +231,7 @@ static void _register(void)
         memset(interval, 0, 8);
         fmt_u32_dec(interval, LWM2M_REG_INTERVAL);
         
-        gcoap_req_init(&pdu, buf, GCOAP_PDU_BUF_SIZE, COAP_METHOD_POST,
+        gcoap_req_init(&pdu, buf, CONFIG_GCOAP_PDU_BUF_SIZE, COAP_METHOD_POST,
                       "/rd");
         coap_hdr_set_type(pdu.hdr, COAP_TYPE_CON);
         coap_opt_add_format(&pdu, COAP_FORMAT_LINK);
@@ -239,7 +239,7 @@ static void _register(void)
         gcoap_add_qstring(&pdu, "ep", "RIOTclient");
         gcoap_add_qstring(&pdu, "lt", interval);
         len = coap_opt_finish(&pdu, COAP_OPT_FINISH_PAYLOAD);
-        if (len + strlen(_REG_PAYLOAD) < GCOAP_PDU_BUF_SIZE) {
+        if (len + strlen(_REG_PAYLOAD) < CONFIG_GCOAP_PDU_BUF_SIZE) {
             memcpy(pdu.payload, _REG_PAYLOAD, strlen(_REG_PAYLOAD));
             len += strlen(_REG_PAYLOAD);
         }
@@ -261,7 +261,7 @@ static void _register(void)
  */
 int main(void)
 {
-    timex_t time;
+     timex_t time;
 
     gcoap_register_listener(&_listener);
     lwm2m_cli_start(thread_getpid());
@@ -296,16 +296,30 @@ int main(void)
                 saul_info_init(SAUL_INFO_DRIVER, &_resources[0]);
                 _client.next_info_time = time.seconds + SAUL_INFO_INTERVAL;
             }
+            /* includes sanity check for next info/reg time */
             if (_client.next_info_time < _client.next_reg_time) {
-                DEBUG("lwm2m: sleeping for %u\n",
-                      (unsigned) (_client.next_info_time - time.seconds));
-                xtimer_sleep(_client.next_info_time - time.seconds);
+                if (_client.next_info_time > time.seconds) {
+                    DEBUG("lwm2m: sleeping for %u\n",
+                          (unsigned) (_client.next_info_time - time.seconds));
+                    xtimer_sleep(_client.next_info_time - time.seconds);
+                }
+                else {
+                    DEBUG("lwm2m: unexpected next info time %u\n",
+                          _client.next_info_time);
+                    _client.next_info_time = time.seconds;
+                }
                 _client.state = LWM2M_STATE_INFO_RENEW;
             }
             else {
-                DEBUG("lwm2m: sleeping for %u\n",
-                      (unsigned) (_client.next_reg_time - time.seconds));
-                xtimer_sleep(_client.next_reg_time - time.seconds);
+                if (_client.next_reg_time > time.seconds) {
+                    DEBUG("lwm2m: sleeping for %u\n",
+                          (unsigned) (_client.next_reg_time - time.seconds));
+                    xtimer_sleep(_client.next_reg_time - time.seconds);
+                else {
+                    DEBUG("lwm2m: unexpected next reg time %u\n",
+                          _client.next_reg_time);
+                    _client.next_reg_time = time.seconds;
+                }
                 _client.state = LWM2M_STATE_REG_RENEW;
             }
             break;

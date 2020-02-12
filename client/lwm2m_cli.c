@@ -29,7 +29,7 @@
 
 #define SHELL_QUEUE_SIZE (4)
 static msg_t _msg_queue[SHELL_QUEUE_SIZE];
-static char _stack[THREAD_STACKSIZE_DEFAULT];
+static char _stack[THREAD_STACKSIZE_DEFAULT * 2];
 static kernel_pid_t _pid = KERNEL_PID_UNDEF;
 static kernel_pid_t _lwm2m_pid = KERNEL_PID_UNDEF;
 
