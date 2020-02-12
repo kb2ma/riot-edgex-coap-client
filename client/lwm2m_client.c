@@ -170,8 +170,13 @@ int lwm2m_client_state(void)
  */
 static int _init_server_addr(void)
 {
+#ifdef SOCK_HAS_IPV6
     _client.server_ep.family = AF_INET6;
+#else        
+    _client.server_ep.family = AF_INET;
+#endif
 
+#ifdef MODULE_GNRC_SOCK_UDP
     /* parse for interface specifier, like %1 */
     char *iface = ipv6_addr_split_iface(LWM2M_SERVER_ADDR);
     if (!iface) {
@@ -191,19 +196,33 @@ static int _init_server_addr(void)
         }
         _client.server_ep.netif = pid;
     }
+#else
+    _client.server_ep.netif = SOCK_ADDR_ANY_NETIF;
+#endif
 
     /* build address */
+#ifdef SOCK_HAS_IPV6
     ipv6_addr_t addr;
-    if (ipv6_addr_from_str(&addr, LWM2M_SERVER_ADDR) == NULL) {
+    if (!ipv6_addr_from_str(&addr, LWM2M_SERVER_ADDR)) {
         DEBUG("lwm2m: unable to parse destination address\n");
         return -1;
     }
+#ifdef MODULE_GNRC_SOCK_UDP
     if ((_client.server_ep.netif == SOCK_ADDR_ANY_NETIF)
             && ipv6_addr_is_link_local(&addr)) {
         DEBUG("lwm2m: must specify interface for link local target\n");
         return -1;
     }
+#endif  /* MODULE_GNRC_SOCK_UDP */
     memcpy(&_client.server_ep.addr.ipv6[0], &addr.u8[0], sizeof(addr.u8));
+#else  /* SOCK_HAS_IPV6 */
+    ipv4_addr_t addr;
+    if (!ipv4_addr_from_str((ipv4_addr_t *)&addr, LWM2M_SERVER_ADDR)) {
+        puts("gcoap_cli: unable to parse destination address");
+        return -1;
+    }
+    memcpy(&_client.server_ep.addr.ipv4[0], &addr.u8[0], sizeof(addr.u8));
+#endif  /* SOCK_HAS_IPV6 */
 
     _client.server_ep.port = CONFIG_GCOAP_PORT;
 
