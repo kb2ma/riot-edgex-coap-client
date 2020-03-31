@@ -324,7 +324,7 @@ int main(void)
                 }
                 else {
                     DEBUG("lwm2m: unexpected next info time %u\n",
-                          _client.next_info_time);
+                          (unsigned) _client.next_info_time);
                     _client.next_info_time = time.seconds;
                 }
                 _client.state = LWM2M_STATE_INFO_RENEW;
@@ -334,9 +334,10 @@ int main(void)
                     DEBUG("lwm2m: sleeping for %u\n",
                           (unsigned) (_client.next_reg_time - time.seconds));
                     xtimer_sleep(_client.next_reg_time - time.seconds);
+                }
                 else {
                     DEBUG("lwm2m: unexpected next reg time %u\n",
-                          _client.next_reg_time);
+                          (unsigned) _client.next_reg_time);
                     _client.next_reg_time = time.seconds;
                 }
                 _client.state = LWM2M_STATE_REG_RENEW;
