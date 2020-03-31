@@ -48,7 +48,7 @@ endif
 DEVELHELP ?= 1
 
 TAP ?= tap0
-IPV6_PREFIX ?= fd00:dead:beef::/64
+IPV6_PREFIX ?= fd00:dead:beef
 
 # Specific the server address
 SERVER_ADDR ?= '"fd00:dead:beef::1"'

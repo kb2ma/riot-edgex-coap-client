@@ -1,4 +1,12 @@
 #!/bin/sh
+# Sets up networking and runs a terminal for ethos based networking 
+# for a RIOT 'usb' flavor network setup.
+# The node is on the same network prefix as the external network.
+#
+# Parameters in order passed in:
+# PORT --- serial port, like /dev/ttyACMx
+# TAP ---- name of TAP device, like tap0
+# PREFIX - external network prefix, like fd00:bbbb
 
 ETHOS_DIR="/home/kbee/dev/riot/repo/dist/tools/ethos"
 
@@ -8,7 +16,7 @@ create_tap() {
     sysctl -w net.ipv6.conf.${TAP}.accept_ra=0
     ip link set ${TAP} up
     ip a a fe80::1/64 dev ${TAP}
-    ip a a fd00:bbbb::1/128 dev lo
+    ip a a ${PREFIX}::1/128 dev lo
 }
 
 remove_tap() {
@@ -18,7 +26,7 @@ remove_tap() {
 cleanup() {
     echo "Cleaning up..."
     remove_tap
-    ip a d fd00:bbbb::1/128 dev lo
+    ip a d ${PREFIX}::1/128 dev lo
     trap "" INT QUIT TERM EXIT
 }
 
