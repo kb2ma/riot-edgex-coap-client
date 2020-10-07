@@ -7,11 +7,11 @@
  */
 
 /**
- * @ingroup     app_lwm2m_client
+ * @ingroup     app_edgex_client
  * @{
  *
  * @file
- * @brief       CLI for RIOT native LwM2M client
+ * @brief       CLI for RIOT native EdgeX device
  *
  * @author      Ken Bannister <kb2ma@runbox.com>
  * @}
@@ -24,14 +24,14 @@
 #include "msg.h"
 #include "shell.h"
 #include "thread.h"
-#include "lwm2m_cli.h"
-#include "lwm2m_client.h"
+#include "edgex_cli.h"
+#include "edgex_device.h"
 
 #define SHELL_QUEUE_SIZE (4)
 static msg_t _msg_queue[SHELL_QUEUE_SIZE];
 static char _stack[THREAD_STACKSIZE_DEFAULT * 2];
 static kernel_pid_t _pid = KERNEL_PID_UNDEF;
-static kernel_pid_t _lwm2m_pid = KERNEL_PID_UNDEF;
+static kernel_pid_t _device_pid = KERNEL_PID_UNDEF;
 
 
 static int _cli_cmd(int argc, char **argv)
@@ -42,8 +42,8 @@ static int _cli_cmd(int argc, char **argv)
 
     if (!strcmp(argv[1], "start")) {
         int ret = -1;
-        if (lwm2m_client_state() == LWM2M_STATE_INIT) {
-            ret = thread_wakeup(_lwm2m_pid);
+        if (edgex_device_state() == DEVICE_STATE_INIT) {
+            ret = thread_wakeup(_device_pid);
         }
         if (ret != 1) {
             printf("Failed to start: %d\n", ret);
@@ -51,7 +51,7 @@ static int _cli_cmd(int argc, char **argv)
         return 0;
     }
     else if (!strcmp(argv[1], "state")) {
-        printf("Client state: %d\n", lwm2m_client_state());
+        printf("Device state: %d\n", edgex_device_state());
         return 0;
     }
 
@@ -62,7 +62,7 @@ help_error:
 }
 
 static const shell_command_t my_commands[] = {
-    { "lwm2m", "LwM2M client commands", _cli_cmd },
+    { "edgex", "EdgeX device commands", _cli_cmd },
     { NULL, NULL, NULL }
 };
 
@@ -79,12 +79,12 @@ static void *_run_shell(void *arg)
     return 0;
 }
 
-int lwm2m_cli_start(kernel_pid_t lwm2m_pid)
+int edgex_cli_start(kernel_pid_t device_pid)
 {
     if (_pid != KERNEL_PID_UNDEF) {
         return -EALREADY;
     }
-    _lwm2m_pid = lwm2m_pid;
+    _device_pid = device_pid;
 
     _pid = thread_create(_stack, sizeof(_stack),
                          THREAD_PRIORITY_MAIN+1, THREAD_CREATE_STACKTEST,

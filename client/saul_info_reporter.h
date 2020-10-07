@@ -34,12 +34,11 @@ extern "C" {
  * @brief Initialize on the information/resource to report
  *
  * @param[in] driver   name of SAUL driver to retrieve value
- * @param[in] resource CoAP resource to report on
  *
  * @return 0 if success
  * @return <0 on failure
  */
-int saul_info_init(const char *driver, const coap_resource_t *resource);
+int saul_info_init(const char *driver);
 
 /**
  * @brief Prints a sensor value to a char buffer.
@@ -57,14 +56,13 @@ int saul_info_init(const char *driver, const coap_resource_t *resource);
 ssize_t saul_info_print(int16_t val, int scale, char *val_buf, int buflen);
  
 /**
- * @brief Send an information report to the server if observing
+ * @brief Reads sensor
  *
- * Also takes a reading as needed.
- *
+ * @param[out] data  SAUL data value read
  * @return 0 if success
  * @return <0 on failure
  */
-int saul_info_send(void);
+int saul_info_read(phydat_t *data);
 
 /**
  * @brief Provides the current temperature value.

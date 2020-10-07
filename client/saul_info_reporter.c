@@ -32,7 +32,6 @@
 #include "debug.h"
 
 static saul_reg_t *_saul_dev;
-static const coap_resource_t *_resource;
 static phydat_t _temp_dat;
 
 
@@ -67,46 +66,23 @@ ssize_t saul_info_print(int16_t val, int scale, char *val_buf, int buflen) {
     return val_len;
 }
 
-/*
- * Sends reading if observed.
- */
-static void _send(phydat_t temp_dat)
-{
-    coap_pkt_t pdu;
-    uint8_t buf[40];
-
-    if (gcoap_obs_init(&pdu, buf, 40, _resource) == GCOAP_OBS_INIT_OK) {
-        coap_opt_add_format(&pdu, COAP_FORMAT_TEXT);
-        size_t len = coap_opt_finish(&pdu, COAP_OPT_FINISH_PAYLOAD);
-
-        if (pdu.payload_len >= 10) {
-            len += saul_info_print(temp_dat.val[0], temp_dat.scale,
-                                   (char *)pdu.payload, 10);
-            gcoap_obs_send(buf, len, _resource);
-        }
-    }
-}
-
-int saul_info_send(void)
+int saul_info_read(phydat_t *data)
 {
     /* take a temperature reading */
-    phydat_t phy;
 #ifdef BOARD_NATIVE
-    memcpy(&phy, &_temp_dat, sizeof(phydat_t));
-#endif
-
-#ifdef BOARD_NATIVE
-    phy.val[0] += 1;
+    memcpy(data, &_temp_dat, sizeof(phydat_t));
+    data->val[0] += 1;
     int res = 1;
 #else
-    int res = saul_reg_read(_saul_dev, &phy);
+    memset(data, 0, sizeof(phydat_t));
+    int res = saul_reg_read(_saul_dev, data);
 #endif
 
     if (res) {
         if (ENABLE_DEBUG) {
             char val_buf[10];
-            if (saul_info_print(phy.val[0], phy.scale, val_buf, 10) > 0) {
-                printf("temperature: %s, unit %u\n", val_buf, phy.unit);
+            if (saul_info_print(data->val[0], data->scale, val_buf, 10) > 0) {
+                printf("temperature: %s, unit %u\n", val_buf, data->unit);
             }
         }
     }
@@ -115,14 +91,13 @@ int saul_info_send(void)
         return -1;
     }
 
-    _temp_dat.val[0] = phy.val[0];
-    _temp_dat.scale = phy.scale;
+    _temp_dat.val[0] = data->val[0];
+    _temp_dat.scale = data->scale;
 
-    _send(_temp_dat);
     return 0;
 }
 
-int saul_info_init(const char *driver, const coap_resource_t *resource)
+int saul_info_init(const char *driver)
 {
 #ifdef BOARD_NATIVE
     (void)driver;
@@ -137,7 +112,6 @@ int saul_info_init(const char *driver, const coap_resource_t *resource)
         return -1;
     }
 #endif
-    _resource = resource;
     return 0;
 }
 

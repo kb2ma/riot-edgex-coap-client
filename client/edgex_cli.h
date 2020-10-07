@@ -7,17 +7,17 @@
  */
 
 /**
- * @ingroup     app_lwm2m_client
+ * @ingroup     app_edgex_device
  * @{
  *
  * @file
- * @brief       LwM2M client CLI
+ * @brief       EdgeX device CLI
  *
  * @author      Ken Bannister <kb2ma@runbox.com>
  */
 
-#ifndef LWM2M_CLI_H
-#define LWM2M_CLI_H
+#ifndef EDGEX_CLI_H
+#define EDGEX_CLI_H
 
 #include "kernel_types.h"
 
@@ -28,18 +28,18 @@ extern "C" {
 /**
  * @brief Starts the CLI thread.
  *
- * Runs at a lower priority than the main LwM2M thread.
+ * Runs at a lower priority than the main EdgeX device thread.
  *
- * @param lwm2m_pid PID for the main LwM2M thread
+ * @param edgex_pid PID for the main EdgeX device thread
  *
  * @return 0 if thread started OK
  * @return -EALREADY if CLI thread already started
  */
-int lwm2m_cli_start(kernel_pid_t lwm2m_pid);
+int edgex_cli_start(kernel_pid_t device_pid);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LWM2M_CLI_H */
+#endif /* EDGEX_CLI_H */
 /** @} */

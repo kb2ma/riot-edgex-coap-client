@@ -58,8 +58,14 @@ DEVELHELP ?= 1
 SERVER_ADDR ?= '"fd00:dead:beef::1"'
 
 ifneq (,$(SERVER_ADDR))
-  CFLAGS += -DLWM2M_SERVER_ADDR=$(SERVER_ADDR)
+  CFLAGS += -DEDGEX_SERVER_ADDR=$(SERVER_ADDR)
 endif
+
+# Path for data URL on EdgeX server
+CFLAGS += -DEDGEX_SERVER_PATH='"/a1r/d1/temp"'
+
+# Set to 1 to show CLI in terminal; otherwise app starts automatically
+CFLAGS += -DEDGEX_CLI_START=0
 
 CFLAGS += -DTHREAD_PRIORITY_MAIN=15
 
