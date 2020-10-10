@@ -62,7 +62,7 @@ ifneq (,$(SERVER_ADDR))
 endif
 
 # Path for data URL on EdgeX server
-CFLAGS += -DEDGEX_SERVER_PATH='"/a1r/d1/temp"'
+CFLAGS += -DEDGEX_SERVER_PATH='"/a1r/d1/float"'
 
 # Set to 1 to show CLI in terminal; otherwise app starts automatically
 CFLAGS += -DEDGEX_CLI_START=0
